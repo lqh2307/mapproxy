@@ -38,38 +38,10 @@ if platform.python_version_tuple() < ('2', '6'):
     # for mapproxy-seed
     install_requires.append('multiprocessing>=2.6')
 
-
-def long_description(changelog_releases=10):
-    import re
-    import textwrap
-
-    readme = open('README.md').read()
-    changes = ['Changes\n-------\n']
-    version_line_re = re.compile(r'^\d\.\d+\.\d+\S*\s20\d\d-\d\d-\d\d')
-    for line in open('CHANGES.txt'):
-        if version_line_re.match(line):
-            if changelog_releases == 0:
-                break
-            changelog_releases -= 1
-        changes.append(line)
-
-    changes.append(textwrap.dedent('''
-        Older changes
-        -------------
-        See https://raw.github.com/mapproxy/mapproxy/master/CHANGES.txt
-        '''))
-    return readme + ''.join(changes)
-
-
 setup(
     name='MapProxy',
-    version="3.0.1",
+    version="1.0.0",
     description='An accelerating proxy for tile and web map services',
-    long_description=long_description(7),
-    author='Oliver Tonnhofer',
-    author_email='olt@omniscale.de',
-    url='https://mapproxy.org',
-    license='Apache Software License 2.0',
     packages=find_packages(),
     include_package_data=True,
     entry_points={

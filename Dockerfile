@@ -1,37 +1,67 @@
-FROM python:3.12-slim-bookworm AS builder
+FROM python:3.12-slim-bookworm AS base-libs
 
-RUN export DEBIAN_FRONTEND=noninteractive && apt-get -y update && apt-get -y upgrade && apt-get -y install --no-install-recommends \
-  python3-pil \
-  python3-yaml \
-  python3-pyproj \
-  libgeos-dev \
-  python3-lxml \
-  libgdal-dev \
-  python3-shapely \
-  libxml2-dev \
-  libxslt-dev && \
-  apt-get -y --purge autoremove && \
-  apt-get clean && \
-  rm -rf /var/lib/apt/lists/*
+# set proxy
+ARG http_proxy=http://10.55.123.98:3333
+ARG https_proxy=http://10.55.123.98:3333
+
+RUN \
+  export DEBIAN_FRONTEND=noninteractive \
+  && apt-get -y update \
+  && apt-get -y upgrade \
+  && apt-get -y install --no-install-recommends \
+    python3-pil \
+    python3-yaml \
+    python3-pyproj \
+    libgeos-dev \
+    python3-lxml \
+    libgdal-dev \
+    python3-shapely \
+    libxml2-dev \
+    libxslt-dev \
+  && apt-get -y --purge autoremove \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
+
+
+FROM base-libs AS builder
+
+# set proxy
+ARG http_proxy=http://10.55.123.98:3333
+ARG https_proxy=http://10.55.123.98:3333
 
 WORKDIR /mapproxy
 
-COPY setup.py MANIFEST.in README.md CHANGES.txt AUTHORS.txt COPYING.txt LICENSE.txt ./
+COPY setup.py MANIFEST.in .
 COPY mapproxy mapproxy
 
 RUN pip wheel . -w dist
 
-RUN groupadd mapproxy && \
-    useradd --home-dir /mapproxy -s /bin/bash -g mapproxy mapproxy && \
-    chown -R mapproxy:mapproxy /mapproxy
+
+FROM base-libs AS base
+
+# set proxy
+ARG http_proxy=http://10.55.123.98:3333
+ARG https_proxy=http://10.55.123.98:3333
+
+WORKDIR /mapproxy
+
+RUN \
+  groupadd mapproxy \
+  && useradd --home-dir /mapproxy -s /bin/bash -g mapproxy mapproxy \
+  && chown -R mapproxy:mapproxy /mapproxy
 
 USER mapproxy:mapproxy
 
-ENV PATH="${PATH}:/mapproxy/.local/bin"
+ENV PATH=${PATH}:/mapproxy/.local/bin
 
-RUN pip install requests riak==2.4.2 redis boto3 azure-storage-blob Shapely && \
-  pip install --find-links=./dist --no-index MapProxy && \
-  pip cache purge
+COPY --from=builder /mapproxy/dist/* dist/
+
+RUN \
+  pip install requests riak==2.4.2 redis boto3 azure-storage-blob Shapely \
+  && pip install --find-links=dist --no-index MapProxy \
+  && pip cache purge
+
+COPY docker/app.py docker/entrypoint.sh .
 
 ENTRYPOINT ["./entrypoint.sh"]
 
@@ -40,30 +70,44 @@ CMD ["echo", "no CMD given"]
 
 FROM base AS nginx
 
-RUN export DEBIAN_FRONTEND=noninteractive && apt-get -y update && apt-get -y upgrade && apt-get -y install --no-install-recommends nginx gcc \
+# set proxy
+ARG http_proxy=http://10.55.123.98:3333
+ARG https_proxy=http://10.55.123.98:3333
+
+USER root:root
+
+RUN \
+  export DEBIAN_FRONTEND=noninteractive \
+  && apt-get -y update \
+  && apt-get -y upgrade \
+  && apt-get -y install --no-install-recommends \
+    nginx \
+    gcc \
   && apt-get -y --purge autoremove \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
 USER mapproxy:mapproxy
 
-RUN pip install uwsgi && \
-    pip cache purge
+RUN \
+  pip install uwsgi \
+  && pip cache purge
 
-COPY docker/uwsgi.conf .
+COPY docker/uwsgi.conf docker/run-nginx.sh .
 COPY docker/nginx-default.conf /etc/nginx/sites-enabled/default
-COPY docker/run-nginx.sh .
-
-EXPOSE 80
 
 USER root:root
 
-RUN chown -R mapproxy:mapproxy /var/log/nginx \
-    && chown -R mapproxy:mapproxy /var/lib/nginx \
-    && chown -R mapproxy:mapproxy /etc/nginx/conf.d \
-    && touch /var/run/nginx.pid \
-    && chown -R mapproxy:mapproxy /var/run/nginx.pid
+RUN \
+  touch /var/run/nginx.pid \
+  && chown -R mapproxy:mapproxy \
+    /var/log/nginx \
+    /var/lib/nginx \
+    /etc/nginx/conf.d \
+    /var/run/nginx.pid
 
 USER mapproxy:mapproxy
+
+EXPOSE 80
 
 CMD ["./run-nginx.sh"]
