@@ -2,17 +2,6 @@ include setup.py
 include setup.cfg
 include requirements-tests.txt
 
-include doc/GM.txt
-include doc/*.yaml
-include doc/yaml/*.yaml
-include doc/Makefile
-include doc/*.rst
-include doc/conf.py
-include doc/imgs/*.png
-include doc/_static/*.png
-include doc/_static/*.css
-include doc/_templates/*.html
-
 recursive-include mapproxy/config_template *.ini *.wsgi *.yaml
 recursive-include mapproxy/image/fonts *.ttf LICENSE
 recursive-include mapproxy/service/templates *.css *.cfg *.gif *.png *.xml *.html *.js

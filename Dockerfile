@@ -45,13 +45,6 @@ ARG https_proxy=http://10.55.123.98:3333
 
 WORKDIR /mapproxy
 
-RUN \
-  groupadd mapproxy \
-  && useradd --home-dir /mapproxy -s /bin/bash -g mapproxy mapproxy \
-  && chown -R mapproxy:mapproxy /mapproxy
-
-USER mapproxy:mapproxy
-
 ENV PATH=${PATH}:/mapproxy/.local/bin
 
 COPY --from=builder /mapproxy/dist/* dist/
@@ -74,8 +67,6 @@ FROM base AS nginx
 ARG http_proxy=http://10.55.123.98:3333
 ARG https_proxy=http://10.55.123.98:3333
 
-USER root:root
-
 RUN \
   export DEBIAN_FRONTEND=noninteractive \
   && apt-get -y update \
@@ -83,30 +74,14 @@ RUN \
   && apt-get -y install --no-install-recommends \
     nginx \
     gcc \
+  && pip install uwsgi
   && apt-get -y --purge autoremove \
   && apt-get clean \
-  && rm -rf /var/lib/apt/lists/*
-
-USER mapproxy:mapproxy
-
-RUN \
-  pip install uwsgi \
+  && rm -rf /var/lib/apt/lists/* \
   && pip cache purge
 
 COPY docker/uwsgi.conf docker/run-nginx.sh .
 COPY docker/nginx-default.conf /etc/nginx/sites-enabled/default
-
-USER root:root
-
-RUN \
-  touch /var/run/nginx.pid \
-  && chown -R mapproxy:mapproxy \
-    /var/log/nginx \
-    /var/lib/nginx \
-    /etc/nginx/conf.d \
-    /var/run/nginx.pid
-
-USER mapproxy:mapproxy
 
 EXPOSE 80
 
