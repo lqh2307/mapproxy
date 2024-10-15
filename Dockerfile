@@ -74,7 +74,7 @@ RUN \
   && apt-get -y install --no-install-recommends \
     nginx \
     gcc \
-  && pip install uwsgi
+  && pip install uwsgi \
   && apt-get -y remove gcc \
   && apt-get -y --purge autoremove \
   && apt-get clean \
