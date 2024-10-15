@@ -75,6 +75,7 @@ RUN \
     nginx \
     gcc \
   && pip install uwsgi
+  && apt-get -y remove gcc \
   && apt-get -y --purge autoremove \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* \
