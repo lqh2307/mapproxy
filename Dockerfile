@@ -1,8 +1,6 @@
-FROM python:3.12-slim-bookworm AS base-libs
+FROM python:3.12-slim-bookworm AS builder
 
-LABEL maintainer="mapproxy.org"
-
-RUN apt update && apt -y install --no-install-recommends \
+RUN export DEBIAN_FRONTEND=noninteractive && apt-get -y update && apt-get -y upgrade && apt-get -y install --no-install-recommends \
   python3-pil \
   python3-yaml \
   python3-pyproj \
@@ -16,23 +14,12 @@ RUN apt update && apt -y install --no-install-recommends \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/*
 
-
-FROM base-libs AS builder
-
-RUN mkdir /mapproxy
-
 WORKDIR /mapproxy
 
 COPY setup.py MANIFEST.in README.md CHANGES.txt AUTHORS.txt COPYING.txt LICENSE.txt ./
 COPY mapproxy mapproxy
 
-RUN rm -rf dist/*
 RUN pip wheel . -w dist
-
-
-FROM base-libs AS base
-
-RUN mkdir /mapproxy
 
 RUN groupadd mapproxy && \
     useradd --home-dir /mapproxy -s /bin/bash -g mapproxy mapproxy && \
@@ -40,40 +27,20 @@ RUN groupadd mapproxy && \
 
 USER mapproxy:mapproxy
 
-WORKDIR /mapproxy
-
 ENV PATH="${PATH}:/mapproxy/.local/bin"
 
-RUN mkdir mapproxy-dist
-COPY --from=builder /mapproxy/dist/* mapproxy-dist/
-
 RUN pip install requests riak==2.4.2 redis boto3 azure-storage-blob Shapely && \
-  pip install --find-links=./mapproxy-dist --no-index MapProxy && \
+  pip install --find-links=./dist --no-index MapProxy && \
   pip cache purge
-
-COPY docker/app.py .
-
-COPY docker/entrypoint.sh .
 
 ENTRYPOINT ["./entrypoint.sh"]
 
 CMD ["echo", "no CMD given"]
 
-###### development image ######
-
-FROM base AS development
-
-EXPOSE 8080
-
-CMD ["mapproxy-util", "serve-develop", "-b", "0.0.0.0", "/mapproxy/config/mapproxy.yaml"]
-
-##### nginx image ######
 
 FROM base AS nginx
 
-USER root:root
-
-RUN apt update && apt -y install --no-install-recommends nginx gcc \
+RUN export DEBIAN_FRONTEND=noninteractive && apt-get -y update && apt-get -y upgrade && apt-get -y install --no-install-recommends nginx gcc \
   && apt-get -y --purge autoremove \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
@@ -84,9 +51,7 @@ RUN pip install uwsgi && \
     pip cache purge
 
 COPY docker/uwsgi.conf .
-
 COPY docker/nginx-default.conf /etc/nginx/sites-enabled/default
-
 COPY docker/run-nginx.sh .
 
 EXPOSE 80
