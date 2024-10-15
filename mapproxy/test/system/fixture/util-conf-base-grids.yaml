@@ -1,5 +1,0 @@
-grids:
-    webmercator:
-      base: GLOBAL_WEBMERCATOR
-    geodetic:
-      base: GLOBAL_GEODETIC
