@@ -31,7 +31,7 @@ ARG https_proxy=http://10.55.123.98:3333
 
 WORKDIR /mapproxy
 
-COPY setup.py MANIFEST.in .
+COPY setup.py MANIFEST.in ./
 COPY mapproxy mapproxy
 
 RUN pip wheel . -w dist
@@ -54,7 +54,7 @@ RUN \
   && pip install --find-links=dist --no-index MapProxy \
   && pip cache purge
 
-COPY docker/app.py docker/entrypoint.sh .
+COPY docker/app.py docker/entrypoint.sh ./
 
 ENTRYPOINT ["./entrypoint.sh"]
 
@@ -82,7 +82,7 @@ RUN \
   pip install uwsgi \
   && pip cache purge
 
-COPY docker/uwsgi.conf docker/run-nginx.sh .
+COPY docker/uwsgi.conf docker/run-nginx.sh ./
 COPY docker/nginx-default.conf /etc/nginx/sites-enabled/default
 
 EXPOSE 80
