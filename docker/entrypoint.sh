@@ -1,11 +1,15 @@
 #!/bin/sh
 
-cd /mapproxy
+# check /mapproxy/config/mapproxy.yaml and /mapproxy/config/seed.yaml
+if [ -f /mapproxy/config/mapproxy.yaml ] && [ -f /mapproxy/config/seed.yaml ]; then
+  echo "Found /mapproxy/config/mapproxy.yaml and /mapproxy/config/seed.yaml. Running seed..."
+  
+  mapproxy-seed -f /mapproxy/config/mapproxy.yaml -s /mapproxy/config/seed.yaml -c $(nproc)
+elif [ ! -f /mapproxy/config/mapproxy.yaml ] || [ ! -f /mapproxy/config/seed.yaml ]; then
+  echo "Missing one of /mapproxy/config/mapproxy.yaml and /mapproxy/config/seed.yaml. Creating new one from template..."
 
-# create config files if they do not exist yet
-if [ ! -f /mapproxy/config/mapproxy.yaml ]; then
-  echo "No mapproxy configuration found. Creating one from template."
-  mapproxy-util create -t base-config config
+  mapproxy-util create -t base-config /mapproxy/config
 fi
 
+# run the remaining command
 exec "$@"

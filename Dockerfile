@@ -67,6 +67,8 @@ FROM base AS nginx
 ARG http_proxy=http://10.55.123.98:3333
 ARG https_proxy=http://10.55.123.98:3333
 
+WORKDIR /mapproxy
+
 RUN \
   export DEBIAN_FRONTEND=noninteractive \
   && apt-get -y update \
@@ -85,6 +87,7 @@ RUN \
 COPY docker/uwsgi.conf docker/run-nginx.sh ./
 COPY docker/nginx-default.conf /etc/nginx/sites-enabled/default
 
+EXPOSE 8080
 EXPOSE 80
 
 CMD ["./run-nginx.sh"]
