@@ -2,7 +2,7 @@
 *.pyc
 *.patch
 build/
-dist/
+/dist/
 doc/_build
 examples
 .ropeproject/
@@ -15,7 +15,7 @@ nosetests*.xml
 .settings
 .pydevproject
 .tox/
-/config/
+/config
 
 .idea/
 *.iml
