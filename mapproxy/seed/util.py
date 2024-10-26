@@ -191,7 +191,7 @@ class BackoffError(Exception):
     pass
 
 
-def exp_backoff(func, args=(), kw={}, max_repeat=10, start_backoff_sec=2,
+def exp_backoff(func, args=(), kw={}, max_repeat=10, start_backoff_sec=30,
                 exceptions=(Exception,), ignore_exceptions=tuple()):
     n = 0
     while True:
@@ -202,9 +202,11 @@ def exp_backoff(func, args=(), kw={}, max_repeat=10, start_backoff_sec=2,
         except exceptions as ex:
             if n >= max_repeat:
                 raise BackoffError
-            print("An error occured. Retry in %d seconds: %r. Retries left: %d" %
-                  (start_backoff_sec, ex, (max_repeat - n)), file=sys.stderr)
+            print("%r. Retries left: %d - In %d seconds..." %
+                  (ex, (max_repeat - n), start_backoff_sec), file=sys.stderr)
+
             time.sleep(start_backoff_sec)
+
             n += 1
         else:
             return result

@@ -137,17 +137,27 @@ class HTTPClient(object):
             if insecure:
                 ssl_ca_certs = None
 
-        self.opener = create_url_opener(ssl_ca_certs, url, username, password,
-                                        insecure=insecure, manage_cookies=manage_cookies)
+        self.opener = create_url_opener(
+            ssl_ca_certs,
+            url,
+            username,
+            password,
+            insecure=insecure,
+            manage_cookies=manage_cookies,
+        )
         self.header_list = headers.items() if headers else []
 
     def open(self, url, data=None, method=None):
         code = None
         result = None
+
         try:
             req = urllib2.Request(url, data=data)
         except ValueError as e:
-            raise self.handle_url_exception(url, 'URL not correct', e.args[0])
+            raise HTTPClientError(
+                'URL not correct',
+                full_msg='%s "%s": %s' % ('URL not correct', url, e.args[0]),
+            )
         for key, value in self.header_list:
             req.add_header(key, value)
         if method:
@@ -159,33 +169,49 @@ class HTTPClient(object):
             else:
                 result = self.opener.open(req)
         except HTTPError as e:
-            code = e.code
-            raise self.handle_url_exception(
-                url, 'HTTP Error', str(code), response_code=code)
+            raise HTTPClientError(
+                'HTTP Error',
+                response_code=e.code,
+                full_msg='%s "%s": %s' % ('HTTP Error', url, str(e.code)),
+            )
         except URLError as e:
             if isinstance(e.reason, ssl.SSLError):
-                raise self.handle_url_exception(
-                    url, 'Could not verify connection to URL', e.reason.args[1])
+                raise HTTPClientError(
+                    'Could not verify connection to URL',
+                    full_msg='%s "%s": %s' % (
+                        'Could not verify connection to URL', url, e.reason.args[1]),
+                )
             try:
                 reason = e.reason.args[1]
             except (AttributeError, IndexError):
                 reason = e.reason
-            raise self.handle_url_exception(
-                url, 'No response from URL', reason)
+            raise HTTPClientError(
+                'No response from URL',
+                full_msg='%s "%s": %s' % ('No response from URL', url, reason),
+            )
         except ValueError as e:
-            raise self.handle_url_exception(url, 'URL not correct', e.args[0])
+            raise HTTPClientError(
+                'URL not correct',
+                full_msg='%s "%s": %s' % ('URL not correct', url, e.args[0]),
+            )
         except Exception as e:
-            raise self.handle_url_exception(
-                url, 'Internal HTTP error', repr(e))
+            raise HTTPClientError(
+                'Internal HTTP error',
+                full_msg='%s "%s": %s' % ('Internal HTTP error', url, repr(e)),
+            )
         else:
-            code = getattr(result, 'code', 200)
-            if code == 204:
-                raise HTTPClientError(
-                    'HTTP Error "204 No Content"', response_code=204)
+            if result:
+                code = getattr(result, 'code')
+
             return result
         finally:
-            log_request(url, code, result, duration=time.time() -
-                        start_time, method=req.get_method())
+            log_request(
+                url,
+                code,
+                result,
+                duration=time.time() - start_time,
+                method=req.get_method(),
+            )
 
     def open_image(self, url, data=None):
         resp = self.open(url, data=data)
@@ -194,13 +220,6 @@ class HTTPClient(object):
                 raise HTTPClientError(
                     'response is not an image: (%s)' % (resp.read()))
         return ImageSource(resp)
-
-    def handle_url_exception(self, url, message, reason, response_code=None):
-        return HTTPClientError(
-            message,
-            response_code=response_code,
-            full_msg='%s "%s": %s' % (message, url, reason),
-        )
 
 
 def auth_data_from_url(url):
@@ -253,7 +272,9 @@ def auth_data_from_url(url):
 
 def open_url(url):
     url, (username, password) = auth_data_from_url(url)
+
     http_client = HTTPClient(url, username, password)
+
     return http_client.open(url)
 
 
