@@ -1,6 +1,5 @@
 # WSGI module for use with Apache mod_wsgi or gunicorn
 
-import os
 from logging.config import fileConfig
 from mapproxy.wsgiapp import make_wsgi_app
 
