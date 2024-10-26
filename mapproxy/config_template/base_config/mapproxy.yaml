@@ -1,9 +1,6 @@
 # -------------------------------
-# MapProxy example configuration.
+# MapProxy example configuration
 # -------------------------------
-#
-# This is a minimal MapProxy configuration.
-# See full_example.yaml and the documentation for more options.
 #
 
 # Starts the following services:
