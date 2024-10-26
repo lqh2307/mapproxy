@@ -44,6 +44,9 @@ caches:
   osm_cache:
     grids: [webmercator]
     sources: [osm_source]
+    cache:
+      type: file
+      directory: cache_data/osm
 
 sources:
   osm_source:
