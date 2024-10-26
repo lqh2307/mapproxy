@@ -48,7 +48,8 @@ def setup_logging(level=logging.INFO, format=None):
 
 
 def serve_develop_command(args):
-    parser = optparse.OptionParser("usage: %prog serve-develop [options] mapproxy.yaml")
+    parser = optparse.OptionParser(
+        "usage: %prog serve-develop [options] mapproxy.yaml")
     parser.add_option("-b", "--bind",
                       dest="address", default='127.0.0.1:8080',
                       help="Server socket [127.0.0.1:8080]. Use 0.0.0.0 for external access. :1234 to change port.")
@@ -109,7 +110,8 @@ def serve_develop_command(args):
 
 
 def serve_multiapp_develop_command(args):
-    parser = optparse.OptionParser("usage: %prog serve-multiapp-develop [options] projects/")
+    parser = optparse.OptionParser(
+        "usage: %prog serve-multiapp-develop [options] projects/")
     parser.add_option("-b", "--bind",
                       dest="address", default='127.0.0.1:8080',
                       help="Server socket [127.0.0.1:8080]")
@@ -178,7 +180,8 @@ class CreateCommand(object):
     }
 
     def __init__(self, args):
-        parser = optparse.OptionParser("usage: %prog create [options] [destination]")
+        parser = optparse.OptionParser(
+            "usage: %prog create [options] [destination]")
         parser.add_option("-t", "--template", dest="template",
                           help="Create a configuration from this template.")
         parser.add_option("-l", "--list-templates", dest="list_templates",
@@ -210,7 +213,8 @@ class CreateCommand(object):
                 sys.exit(1)
 
             sys.exit(
-                getattr(self, 'template_' + self.options.template.replace('-', '_'))()
+                getattr(self, 'template_' +
+                        self.options.template.replace('-', '_'))()
             )
         else:
             self.parser.print_help()
@@ -243,7 +247,8 @@ class CreateCommand(object):
         print("writing MapProxy app to %s" % (app_filename, ))
 
         template_dir = self.template_dir()
-        app_template = io.open(os.path.join(template_dir, 'config.wsgi'), encoding='utf-8').read()
+        app_template = io.open(os.path.join(
+            template_dir, 'config.wsgi'), encoding='utf-8').read()
         with io.open(app_filename, 'w', encoding='utf-8') as f:
             f.write(app_template % {'mapproxy_conf': mapproxy_conf,
                                     'here': os.path.dirname(mapproxy_conf)})
@@ -257,8 +262,7 @@ class CreateCommand(object):
 
         template_dir = self.template_dir()
 
-        for filename in ('mapproxy.yaml', 'seed.yaml',
-                         'full_example.yaml', 'full_seed_example.yaml'):
+        for filename in ('mapproxy.yaml', 'seed.yaml'):
             to = os.path.join(outdir, filename)
             from_ = os.path.join(template_dir, filename)
             if os.path.exists(to) and not self.options.force:
@@ -276,7 +280,8 @@ class CreateCommand(object):
             return 1
 
         template_dir = self.template_dir()
-        log_template = io.open(os.path.join(template_dir, 'log.ini'), encoding='utf-8').read()
+        log_template = io.open(os.path.join(
+            template_dir, 'log.ini'), encoding='utf-8').read()
         with io.open(log_filename, 'w', encoding='utf-8') as f:
             f.write(log_template)
 

@@ -1,7 +1,6 @@
-# ---------------------------------------
-# MapProxy example seeding configuration
-# ---------------------------------------
-#
+# #####################################################################
+#               MapProxy example seed configuration
+# #####################################################################
 
 seeds:
   osm_seed:
@@ -12,18 +11,18 @@ seeds:
       from: 0
       to: 15
     refresh_before:
-      time: 2024-10-10T12:35:00
+      time: 2024-10-10T12:00:00
 
 cleanups:
   osm_cleanup:
     caches: [osm_cache]
     remove_before:
-      days: 14
+      time: 2024-10-10T12:00:00
     levels:
       from: 0
       to: 15
 
 coverages:
   osm_coverage:
-    bbox: [96, 4, 114, 24]
+    bbox: [96, 4, 120, 28]
     srs: EPSG:4326
