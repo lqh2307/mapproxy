@@ -46,7 +46,7 @@ FROM base-libs AS base
 
 WORKDIR /mapproxy
 
-ENV PATH=${PATH}:/mapproxy/.local/bin
+ENV PATH=$PATH:/mapproxy/.local/bin
 
 COPY --from=builder /mapproxy/dist/* dist/
 

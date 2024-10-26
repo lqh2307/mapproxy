@@ -31,14 +31,16 @@ log_config = logging.getLogger('mapproxy.config')
 
 
 class TiledSource(MapLayer):
-    def __init__(self, grid, client, coverage=None, image_opts=None, error_handler=None,
-                 res_range=None):
+    def __init__(
+        self, grid, client, coverage=None, image_opts=None, error_handler=None,
+            res_range=None):
         MapLayer.__init__(self, image_opts=image_opts)
         self.grid = grid
         self.client = client
         self.image_opts = image_opts or ImageOptions()
         self.coverage = coverage
-        self.extent = coverage.extent if coverage else map_extent_from_grid(grid)
+        self.extent = coverage.extent if coverage else map_extent_from_grid(
+            grid)
         self.res_range = res_range
         self.error_handler = error_handler
 
@@ -65,7 +67,8 @@ class TiledSource(MapLayer):
         if self.coverage and not self.coverage.intersects(query.bbox, query.srs):
             raise BlankImage()
 
-        _bbox, grid, tiles = self.grid.get_affected_tiles(query.bbox, query.size)
+        _bbox, grid, tiles = self.grid.get_affected_tiles(
+            query.bbox, query.size)
 
         if grid != (1, 1):
             raise InvalidSourceQuery('BBOX does not align to tile')

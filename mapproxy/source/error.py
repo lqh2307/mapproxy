@@ -22,7 +22,8 @@ class HTTPSourceErrorHandler(object):
         self.response_error_codes = {}
 
     def add_handler(self, http_code, color, cacheable=False, authorize_stale=False):
-        self.response_error_codes[http_code] = (color, cacheable, authorize_stale)
+        self.response_error_codes[http_code] = (
+            color, cacheable, authorize_stale)
 
     def handle(self, status_code, query):
         color = cacheable = None
@@ -35,6 +36,7 @@ class HTTPSourceErrorHandler(object):
 
         transparent = len(color) == 4
         image_opts = ImageOptions(bgcolor=color, transparent=transparent)
-        img_source = BlankImageSource(query.size, image_opts, cacheable=cacheable)
+        img_source = BlankImageSource(
+            query.size, image_opts, cacheable=cacheable)
         img_source.authorize_stale = authorize_stale
         return img_source
