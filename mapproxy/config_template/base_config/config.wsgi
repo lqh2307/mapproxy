@@ -7,5 +7,4 @@ fileConfig("config/log.ini", {
   "here": "config",
 })
 
-from mapproxy.wsgiapp import make_wsgi_app
-application = make_wsgi_app(r'%(mapproxy_conf)s')
+application = make_wsgi_app("config/mapproxy.yaml", reloader=True)
