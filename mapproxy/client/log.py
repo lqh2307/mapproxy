@@ -29,5 +29,6 @@ def log_request(url, status, result=None, size=None, method='GET', duration=None
         size = '-'
     if not status:
         status = '-'
+
     duration = '%d' % (duration*1000) if duration else '-'
-    logger.info('%s %s %s %s %s', method, url.replace(' ', ''), status, size, duration)
+    logger.info('%s %s %s %s %s', method, url, status, size, duration)

@@ -16,7 +16,8 @@
 server = ['wms', 'tms', 'kml']
 
 wms = dict(
-    image_formats=['image/png', 'image/jpeg', 'image/gif', 'image/GeoTIFF', 'image/tiff'],
+    image_formats=['image/png', 'image/jpeg',
+                   'image/gif', 'image/GeoTIFF', 'image/tiff'],
     srs=set(['EPSG:4326', 'EPSG:4258', 'CRS:84', 'EPSG:900913', 'EPSG:3857']),
     strict=False,
     request_parser='default',
@@ -35,8 +36,10 @@ srs = dict(
     axis_order_ne=set(),
     axis_order_en=set(),
     # default sets, both will be combined in config:load_base_config
-    axis_order_ne_=set(['EPSG:4326', 'EPSG:4258', 'EPSG:31466', 'EPSG:31467', 'EPSG:31468']),
-    axis_order_en_=set(['CRS:84', 'EPSG:900913', 'EPSG:25831', 'EPSG:25832', 'EPSG:25833']),
+    axis_order_ne_=set(
+        ['EPSG:4326', 'EPSG:4258', 'EPSG:31466', 'EPSG:31467', 'EPSG:31468']),
+    axis_order_en_=set(
+        ['CRS:84', 'EPSG:900913', 'EPSG:25831', 'EPSG:25832', 'EPSG:25833']),
 )
 
 image = dict(
@@ -59,8 +62,8 @@ log_conf = 'log.ini'
 template_dir = None
 
 cache = dict(
-    base_dir='./cache_data',
-    lock_dir='./cache_data/tile_locks',
+    base_dir='cache_data',
+    lock_dir='cache_data/tile_locks',
     max_tile_limit=500,
     concurrent_tile_creators=2,
     meta_size=(4, 4),
@@ -97,6 +100,5 @@ http = dict(
     concurrent_requests=0,
     method='AUTO',
     access_control_allow_origin='*',
-    hide_error_details=True,
     manage_cookies=False,
 )

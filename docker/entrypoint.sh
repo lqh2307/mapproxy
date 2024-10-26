@@ -2,9 +2,9 @@
 
 # check config/mapproxy.yaml and config/seed.yaml
 if [ -f config/mapproxy.yaml ] && [ -f config/seed.yaml ]; then
-  echo "Found config/mapproxy.yaml and config/seed.yaml"
+  echo "Found config/mapproxy.yaml and config/seed.yaml. Seeding..."
   
-  mapproxy-seed -f config/mapproxy.yaml -s config/seed.yaml -c $(nproc)
+  mapproxy-seed -f config/mapproxy.yaml -s config/seed.yaml -c $(nproc) &
 elif [ ! -f config/mapproxy.yaml ] || [ ! -f config/seed.yaml ]; then
   echo "Missing one of config/mapproxy.yaml or config/seed.yaml. Creating new one from template..."
 

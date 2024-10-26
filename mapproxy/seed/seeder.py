@@ -156,8 +156,7 @@ class TileSeedWorker(TileWorker):
                 return
             with self.tile_mgr.session():
                 exp_backoff(self.tile_mgr.load_tile_coords, args=(tiles,),
-                            max_repeat=10, max_backoff=600,
-                            exceptions=(SourceError, IOError), ignore_exceptions=(LockTimeout, ))
+                            max_repeat=10, exceptions=(SourceError, IOError), ignore_exceptions=(LockTimeout, ))
 
 
 class TileCleanupWorker(TileWorker):
@@ -194,7 +193,8 @@ class SeedProgress(object):
         self.level_progresses.append((i, subtiles))
         self.level_progresses_level += 1
         self.progress_str_parts.append(status_symbol(i, subtiles))
-        self.level_progress_percentages.append(self.level_progress_percentages[-1] / subtiles)
+        self.level_progress_percentages.append(
+            self.level_progress_percentages[-1] / subtiles)
 
         yield
 
@@ -299,9 +299,11 @@ class TileWalker(object):
             self.report_till_level = task.levels[num_seed_levels-2]
         else:
             self.report_till_level = task.levels[num_seed_levels-1]
-        meta_size = self.tile_mgr.meta_grid.meta_size if self.tile_mgr.meta_grid else (1, 1)
+        meta_size = self.tile_mgr.meta_grid.meta_size if self.tile_mgr.meta_grid else (
+            1, 1)
         self.tiles_per_metatile = meta_size[0] * meta_size[1]
-        self.grid = MetaGrid(self.tile_mgr.grid, meta_size=meta_size, meta_buffer=0)
+        self.grid = MetaGrid(self.tile_mgr.grid,
+                             meta_size=meta_size, meta_buffer=0)
         self.count = 0
         self.seed_progress = seed_progress or SeedProgress()
 
@@ -342,7 +344,8 @@ class TileWalker(object):
         :param all_subtiles: seed all subtiles and do not check for
                              intersections with bbox/geom
         """
-        bbox_, tiles, subtiles = self.grid.get_affected_level_tiles(cur_bbox, current_level)
+        bbox_, tiles, subtiles = self.grid.get_affected_level_tiles(
+            cur_bbox, current_level)
         total_subtiles = tiles[0] * tiles[1]
         if len(levels) < self.skip_geoms_for_last_levels:
             # do not filter in last levels
@@ -506,10 +509,12 @@ def seed(tasks, concurrency=2, dry_run=False, skip_geoms_for_last_levels=0,
             with cache_locker.lock(task.md['cache_name'], no_block=not wait):
                 if progress_logger and progress_logger.progress_store:
                     progress_logger.current_task_id = task.id
-                    start_progress = progress_logger.progress_store.get(task.id)
+                    start_progress = progress_logger.progress_store.get(
+                        task.id)
                 else:
                     start_progress = None
-                seed_progress = SeedProgress(old_progress_identifier=start_progress)
+                seed_progress = SeedProgress(
+                    old_progress_identifier=start_progress)
                 seed_task(task, concurrency, dry_run, skip_geoms_for_last_levels, progress_logger,
                           seed_progress=seed_progress, skip_uncached=skip_uncached)
         except CacheLockedError:

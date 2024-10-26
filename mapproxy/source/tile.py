@@ -67,7 +67,7 @@ class TiledSource(MapLayer):
         if self.coverage and not self.coverage.intersects(query.bbox, query.srs):
             raise BlankImage()
 
-        _bbox, grid, tiles = self.grid.get_affected_tiles(
+        _, grid, tiles = self.grid.get_affected_tiles(
             query.bbox, query.size)
 
         if grid != (1, 1):
@@ -82,8 +82,7 @@ class TiledSource(MapLayer):
                 resp = self.error_handler.handle(e.response_code, query)
                 if resp:
                     return resp
-            log.warning('could not retrieve tile: %s', e)
-            reraise_exception(SourceError(e.args[0]), sys.exc_info())
+            reraise_exception(SourceError(e.full_msg), sys.exc_info())
 
 
 class CacheSource(CacheMapLayer):

@@ -10,7 +10,6 @@ RUN \
   && apt-get -y upgrade \
   && apt-get -y install --no-install-recommends \
     python3-pil \
-    python3-werkzeug \
     python3-yaml \
     python3-pyproj \
     libgeos-dev \
@@ -51,15 +50,13 @@ ENV PATH=$PATH:/mapproxy/.local/bin
 COPY --from=builder /mapproxy/dist/* dist/
 
 RUN \
-  pip install requests riak==2.4.2 redis boto3 azure-storage-blob Shapely \
+  pip install requests riak==2.4.2 redis boto3 azure-storage-blob Shapely werkzeug \
   && pip install --find-links=dist --no-index MapProxy \
   && pip cache purge
 
 COPY docker/app.py docker/entrypoint.sh ./
 
 ENTRYPOINT ["./entrypoint.sh"]
-
-CMD ["echo", "no CMD given"]
 
 
 FROM base AS nginx

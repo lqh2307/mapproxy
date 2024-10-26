@@ -16,12 +16,10 @@
 """
 Tile retrieval (WMS, TMS, etc.).
 """
-import sys
 import time
 
 from mapproxy.version import version
 from mapproxy.image import ImageSource
-from mapproxy.util.py import reraise_exception
 from mapproxy.client.log import log_request
 
 from urllib import request as urllib2
@@ -41,46 +39,30 @@ class HTTPClientError(Exception):
         self.full_msg = full_msg
 
 
-def build_https_handler(ssl_ca_certs, insecure):
+def build_https_handler(ssl_ca_certs=None, insecure=False):
     if insecure:
         ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
         ctx.check_hostname = False
         ctx.verify_mode = ssl.CERT_NONE
-    elif ssl_ca_certs:
-        ctx = ssl.create_default_context(cafile=ssl_ca_certs)
     else:
-        ctx = ssl.create_default_context()
+        ctx = ssl.create_default_context(
+            cafile=ssl_ca_certs) if ssl_ca_certs else ssl.create_default_context()
     return urllib2.HTTPSHandler(context=ctx)
 
 
 class VerifiedHTTPSConnection(httplib.HTTPSConnection):
-    def __init__(self, *args, **kw):
-        self._ca_certs = kw.pop('ca_certs', None)
-        httplib.HTTPSConnection.__init__(self, *args, **kw)
+    def __init__(self, *args, ca_certs=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._ca_certs = ca_certs
 
     def connect(self):
-        # overrides the version in httplib so that we do
-        #    certificate verification
-
-        if hasattr(socket, 'create_connection') and hasattr(self, 'source_address'):
-            sock = socket.create_connection((self.host, self.port),
-                                            self.timeout, self.source_address)
-        else:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.connect((self.host, self.port))
-
-        if hasattr(self, '_tunnel_host') and self._tunnel_host:
-            # for Python >= 2.6 with proxy support
+        sock = socket.create_connection((self.host, self.port), self.timeout)
+        if hasattr(self, '_tunnel_host'):
             self.sock = sock
             self._tunnel()
-
-        # wrap the socket using verification with the root
-        #    certs in self.ca_certs_path
-        self.sock = ssl.wrap_socket(sock,
-                                    self.key_file,
-                                    self.cert_file,
-                                    cert_reqs=ssl.CERT_REQUIRED,
-                                    ca_certs=self._ca_certs)
+        context = ssl.create_default_context(
+            cafile=self._ca_certs) if self._ca_certs else ssl.create_default_context()
+        self.sock = context.wrap_socket(sock, server_hostname=self.host)
 
 
 def verified_https_connection_with_ca_certs(ca_certs):
@@ -148,7 +130,7 @@ create_url_opener = _URLOpenerCache()
 
 class HTTPClient(object):
     def __init__(self, url=None, username=None, password=None, insecure=False,
-                 ssl_ca_certs=None, timeout=None, headers=None, hide_error_details=False,
+                 ssl_ca_certs=None, timeout=None, headers=None,
                  manage_cookies=False):
         self._timeout = timeout
         if url and url.startswith('https'):
@@ -158,7 +140,6 @@ class HTTPClient(object):
         self.opener = create_url_opener(ssl_ca_certs, url, username, password,
                                         insecure=insecure, manage_cookies=manage_cookies)
         self.header_list = headers.items() if headers else []
-        self.hide_error_details = hide_error_details
 
     def open(self, url, data=None, method=None):
         code = None
@@ -166,8 +147,7 @@ class HTTPClient(object):
         try:
             req = urllib2.Request(url, data=data)
         except ValueError as e:
-            err = self.handle_url_exception(url, 'URL not correct', e.args[0])
-            reraise_exception(err, sys.exc_info())
+            raise self.handle_url_exception(url, 'URL not correct', e.args[0])
         for key, value in self.header_list:
             req.add_header(key, value)
         if method:
@@ -180,52 +160,47 @@ class HTTPClient(object):
                 result = self.opener.open(req)
         except HTTPError as e:
             code = e.code
-            err = self.handle_url_exception(url, 'HTTP Error', str(code), response_code=code)
-            reraise_exception(err, sys.exc_info())
+            raise self.handle_url_exception(
+                url, 'HTTP Error', str(code), response_code=code)
         except URLError as e:
             if isinstance(e.reason, ssl.SSLError):
-                err = self.handle_url_exception(url, 'Could not verify connection to URL', e.reason.args[1])
-                reraise_exception(err, sys.exc_info())
+                raise self.handle_url_exception(
+                    url, 'Could not verify connection to URL', e.reason.args[1])
             try:
                 reason = e.reason.args[1]
             except (AttributeError, IndexError):
                 reason = e.reason
-            err = self.handle_url_exception(url, 'No response from URL', reason)
-            reraise_exception(err, sys.exc_info())
+            raise self.handle_url_exception(
+                url, 'No response from URL', reason)
         except ValueError as e:
-            err = self.handle_url_exception(url, 'URL not correct', e.args[0])
-            reraise_exception(err, sys.exc_info())
+            raise self.handle_url_exception(url, 'URL not correct', e.args[0])
         except Exception as e:
-            err = self.handle_url_exception(url, 'Internal HTTP error', repr(e))
-            reraise_exception(err, sys.exc_info())
+            raise self.handle_url_exception(
+                url, 'Internal HTTP error', repr(e))
         else:
             code = getattr(result, 'code', 200)
             if code == 204:
-                raise HTTPClientError('HTTP Error "204 No Content"', response_code=204)
+                raise HTTPClientError(
+                    'HTTP Error "204 No Content"', response_code=204)
             return result
         finally:
-            log_request(url, code, result, duration=time.time()-start_time, method=req.get_method())
+            log_request(url, code, result, duration=time.time() -
+                        start_time, method=req.get_method())
 
     def open_image(self, url, data=None):
         resp = self.open(url, data=data)
         if 'content-type' in resp.headers:
             if not resp.headers['content-type'].lower().startswith('image'):
-                raise HTTPClientError('response is not an image: (%s)' % (resp.read()))
+                raise HTTPClientError(
+                    'response is not an image: (%s)' % (resp.read()))
         return ImageSource(resp)
 
     def handle_url_exception(self, url, message, reason, response_code=None):
-        full_msg = '%s "%s": %s' % (message, url, reason)
-        if self.hide_error_details:
-            return HTTPClientError(
-                '{} (see logs for URL and reason).'.format(message),
-                response_code=response_code,
-                full_msg=full_msg,
-            )
-        else:
-            return HTTPClientError(
-                full_msg,
-                response_code=response_code,
-            )
+        return HTTPClientError(
+            message,
+            response_code=response_code,
+            full_msg='%s "%s": %s' % (message, url, reason),
+        )
 
 
 def auth_data_from_url(url):

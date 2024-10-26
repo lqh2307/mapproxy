@@ -192,7 +192,7 @@ class BackoffError(Exception):
 
 
 def exp_backoff(func, args=(), kw={}, max_repeat=10, start_backoff_sec=2,
-                exceptions=(Exception,), ignore_exceptions=tuple(), max_backoff=60):
+                exceptions=(Exception,), ignore_exceptions=tuple()):
     n = 0
     while True:
         try:
@@ -201,14 +201,10 @@ def exp_backoff(func, args=(), kw={}, max_repeat=10, start_backoff_sec=2,
             time.sleep(0.01)
         except exceptions as ex:
             if n >= max_repeat:
-                print("An error occured. Giving up", file=sys.stderr)
                 raise BackoffError
-            wait_for = start_backoff_sec * 2**n
-            if wait_for > max_backoff:
-                wait_for = max_backoff
             print("An error occured. Retry in %d seconds: %r. Retries left: %d" %
-                  (wait_for, ex, (max_repeat - n)), file=sys.stderr)
-            time.sleep(wait_for)
+                  (start_backoff_sec, ex, (max_repeat - n)), file=sys.stderr)
+            time.sleep(start_backoff_sec)
             n += 1
         else:
             return result
@@ -225,9 +221,11 @@ def format_seed_task(task):
     info.append("    Seeding cache '%s' with grid '%s' in %s" % (
         task.md['cache_name'], task.md['grid_name'], task.grid.srs.srs_code))
     if task.coverage:
-        info.append('    Limited to coverage in: %s (EPSG:4326)' % (format_bbox(task.coverage.extent.llbbox), ))
+        info.append('    Limited to coverage in: %s (EPSG:4326)' %
+                    (format_bbox(task.coverage.extent.llbbox), ))
     else:
-        info.append('   Complete grid: %s (EPSG:4326)' % (format_bbox(map_extent_from_grid(task.grid).llbbox), ))
+        info.append('   Complete grid: %s (EPSG:4326)' %
+                    (format_bbox(map_extent_from_grid(task.grid).llbbox), ))
     info.append('    Levels: %s' % (task.levels, ))
 
     if task.refresh_timestamp:
@@ -252,9 +250,11 @@ def format_cleanup_task(task):
     info.append("    Cleaning up cache '%s' with grid '%s' in %s" % (
         task.md['cache_name'], task.md['grid_name'], task.grid.srs.srs_code))
     if task.coverage:
-        info.append('    Limited to coverage in: %s (EPSG:4326)' % (format_bbox(task.coverage.extent.llbbox), ))
+        info.append('    Limited to coverage in: %s (EPSG:4326)' %
+                    (format_bbox(task.coverage.extent.llbbox), ))
     else:
-        info.append('    Complete grid: %s (EPSG:4326)' % (format_bbox(map_extent_from_grid(task.grid).llbbox), ))
+        info.append('    Complete grid: %s (EPSG:4326)' %
+                    (format_bbox(map_extent_from_grid(task.grid).llbbox), ))
     info.append('    Levels: %s' % (task.levels, ))
 
     if task.remove_timestamp:
