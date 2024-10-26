@@ -7,7 +7,7 @@ done=0
 trap 'done=1' TERM INT
 
 # run uswgi and nginx in parallel
-uwsgi --ini /mapproxy/uwsgi.conf &
+uwsgi --ini uwsgi.conf &
 echo "uswgi started"
 nginx &
 echo "nginx started"

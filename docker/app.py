@@ -1,10 +1,11 @@
 # WSGI module for use with Apache mod_wsgi or gunicorn
 
-# # uncomment the following lines for logging
-# # create a log.ini with `mapproxy-util create -t log-ini`
-# from logging.config import fileConfig
-# import os.path
-# fileConfig(r'/mapproxy/config/log.ini', {'here': os.path.dirname(__file__)})
-
+import os
+from logging.config import fileConfig
 from mapproxy.wsgiapp import make_wsgi_app
-application = make_wsgi_app(r'/mapproxy/config/mapproxy.yaml', reloader=True)
+
+fileConfig("config/log.ini", {
+  "here": "config",
+})
+
+application = make_wsgi_app("config/mapproxy.yaml", reloader=True)

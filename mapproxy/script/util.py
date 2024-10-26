@@ -264,7 +264,6 @@ class CreateCommand(object):
             if os.path.exists(to) and not self.options.force:
                 self.log_error("%s already exists, use --force", to)
                 return 1
-            print("writing %s" % (to, ))
             shutil.copy(from_, to)
 
         return 0

@@ -1,14 +1,23 @@
 #!/bin/sh
 
-# check /mapproxy/config/mapproxy.yaml and /mapproxy/config/seed.yaml
-if [ -f /mapproxy/config/mapproxy.yaml ] && [ -f /mapproxy/config/seed.yaml ]; then
-  echo "Found /mapproxy/config/mapproxy.yaml and /mapproxy/config/seed.yaml. Running seed..."
+# check config/mapproxy.yaml and config/seed.yaml
+if [ -f config/mapproxy.yaml ] && [ -f config/seed.yaml ]; then
+  echo "Found config/mapproxy.yaml and config/seed.yaml"
   
-  mapproxy-seed -f /mapproxy/config/mapproxy.yaml -s /mapproxy/config/seed.yaml -c $(nproc)
-elif [ ! -f /mapproxy/config/mapproxy.yaml ] || [ ! -f /mapproxy/config/seed.yaml ]; then
-  echo "Missing one of /mapproxy/config/mapproxy.yaml and /mapproxy/config/seed.yaml. Creating new one from template..."
+  mapproxy-seed -f config/mapproxy.yaml -s config/seed.yaml -c $(nproc)
+elif [ ! -f config/mapproxy.yaml ] || [ ! -f config/seed.yaml ]; then
+  echo "Missing one of config/mapproxy.yaml or config/seed.yaml. Creating new one from template..."
 
-  mapproxy-util create -t base-config /mapproxy/config
+  mapproxy-util create -t base-config config
+fi
+
+# check config/log.ini
+if [ -f config/log.ini ]; then
+  echo "Found config/log.ini"
+else
+  echo "Missing config/log.ini. Creating new one from template..."
+
+  mapproxy-util create -t log-ini config/log.ini
 fi
 
 # run the remaining command

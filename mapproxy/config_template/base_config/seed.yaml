@@ -7,21 +7,26 @@
 #
 
 seeds:
-  myseed1:
+  osm_seed:
     caches: [osm_cache]
-    # grids: []
-    # coverages: []
+    grids: [webmercator]
+    coverages: [osm_coverage]
     levels:
-      to: 10
+      from: 0
+      to: 15
     refresh_before:
-      time: 2013-10-10T12:35:00
+      time: 2024-10-10T12:35:00
 
 cleanups:
-  myclean1:
+  osm_cleanup:
     caches: [osm_cache]
     remove_before:
       days: 14
     levels:
-        from: 11
+      from: 0
+      to: 15
 
 coverages:
+  osm_coverage:
+    bbox: [96, 4, 114, 24]
+    srs: EPSG:4326

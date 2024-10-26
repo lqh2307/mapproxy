@@ -156,7 +156,7 @@ class TileSeedWorker(TileWorker):
                 return
             with self.tile_mgr.session():
                 exp_backoff(self.tile_mgr.load_tile_coords, args=(tiles,),
-                            max_repeat=100, max_backoff=600,
+                            max_repeat=10, max_backoff=600,
                             exceptions=(SourceError, IOError), ignore_exceptions=(LockTimeout, ))
 
 
