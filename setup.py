@@ -1,13 +1,61 @@
 from setuptools import setup, find_packages
 
 install_requires = [
-    "PyYAML>=3.0",
-    "future",
-    "pyproj>=2",
-    "jsonschema>=4",
-    "werkzeug",
-    "Pillow !=2.4.0,!=8.3.0,!=8.3.1"
+    'PyYAML>=3.0',
+    'future',
+    'pyproj>=2',
+    'jsonschema>=4',
+    'importlib_resources;python_version<="3.8"',
+    'werkzeug<4'
 ]
+
+
+def package_installed(pkg):
+    """Check if package is installed"""
+    try:
+        importlib.metadata.version(pkg)
+    except importlib.metadata.PackageNotFoundError:
+        return False
+    else:
+        return True
+
+
+# depend on Pillow if it is installed, otherwise
+# depend on PIL if it is installed, otherwise
+# require Pillow
+if package_installed('Pillow'):
+    install_requires.append('Pillow !=2.4.0,!=8.3.0,!=8.3.1')
+elif package_installed('PIL'):
+    install_requires.append('PIL>=1.1.6,<1.2.99')
+else:
+    install_requires.append('Pillow !=2.4.0,!=8.3.0,!=8.3.1')
+
+if platform.python_version_tuple() < ('2', '6'):
+    # for mapproxy-seed
+    install_requires.append('multiprocessing>=2.6')
+
+
+def long_description(changelog_releases=10):
+    import re
+    import textwrap
+
+    readme = open('README.md').read()
+    changes = ['Changes\n-------\n']
+    version_line_re = re.compile(r'^\d\.\d+\.\d+\S*\s20\d\d-\d\d-\d\d')
+    for line in open('CHANGES.txt'):
+        if version_line_re.match(line):
+            if changelog_releases == 0:
+                break
+            changelog_releases -= 1
+        changes.append(line)
+
+    changes.append(textwrap.dedent('''
+        Older changes
+        -------------
+        See https://raw.github.com/mapproxy/mapproxy/master/CHANGES.txt
+        '''))
+    return readme + ''.join(changes)
+
 
 setup(
     name="MapProxy",
