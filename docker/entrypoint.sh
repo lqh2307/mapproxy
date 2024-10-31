@@ -18,6 +18,7 @@ else
   mapproxy-util create -t log-ini config/log.ini
 fi
 
+# setup seed
 if [ "${NO_SEED}" != "YES" ]; then
   SEED_NUM_CORE=${SEED_NUM_CORE:-$(nproc)}
 

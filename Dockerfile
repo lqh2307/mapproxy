@@ -1,8 +1,8 @@
 FROM python:3.12-slim-bookworm AS base-libs
 
 # set proxy
-# ARG http_proxy=http://10.55.123.98:3333
-# ARG https_proxy=http://10.55.123.98:3333
+ARG http_proxy=http://10.55.123.98:3333
+ARG https_proxy=http://10.55.123.98:3333
 
 RUN \
   export DEBIAN_FRONTEND=noninteractive \
@@ -26,8 +26,8 @@ RUN \
 FROM base-libs AS builder
 
 # set proxy
-# ARG http_proxy=http://10.55.123.98:3333
-# ARG https_proxy=http://10.55.123.98:3333
+ARG http_proxy=http://10.55.123.98:3333
+ARG https_proxy=http://10.55.123.98:3333
 
 WORKDIR /mapproxy
 
@@ -40,8 +40,8 @@ RUN pip wheel . -w dist
 FROM base-libs AS base
 
 # set proxy
-# ARG http_proxy=http://10.55.123.98:3333
-# ARG https_proxy=http://10.55.123.98:3333
+ARG http_proxy=http://10.55.123.98:3333
+ARG https_proxy=http://10.55.123.98:3333
 
 WORKDIR /mapproxy
 
@@ -62,8 +62,8 @@ ENTRYPOINT ["./entrypoint.sh"]
 FROM base AS nginx
 
 # set proxy
-# ARG http_proxy=http://10.55.123.98:3333
-# ARG https_proxy=http://10.55.123.98:3333
+ARG http_proxy=http://10.55.123.98:3333
+ARG https_proxy=http://10.55.123.98:3333
 
 WORKDIR /mapproxy
 
