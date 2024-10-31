@@ -2,11 +2,9 @@
 
 # check config/mapproxy.yaml and config/seed.yaml
 if [ -f config/mapproxy.yaml ] && [ -f config/seed.yaml ]; then
-  echo "Found config/mapproxy.yaml and config/seed.yaml. Seeding..."
-  
-  mapproxy-seed -f config/mapproxy.yaml -s config/seed.yaml -c $(nproc) &
-elif [ ! -f config/mapproxy.yaml ] || [ ! -f config/seed.yaml ]; then
-  echo "Missing one of config/mapproxy.yaml or config/seed.yaml. Creating new one from template..."
+  echo "Found config/mapproxy.yaml and config/seed.yaml"
+elif [ ! -f config/mapproxy.yaml ] && [ ! -f config/seed.yaml ]; then
+  echo "Missing config/mapproxy.yaml and config/seed.yaml. Creating new one from template..."
 
   mapproxy-util create -t base-config config
 fi
@@ -18,6 +16,14 @@ else
   echo "Missing config/log.ini. Creating new one from template..."
 
   mapproxy-util create -t log-ini config/log.ini
+fi
+
+if [ "${NO_SEED}" != "YES" ]; then
+  SEED_NUM_CORE=${SEED_NUM_CORE:-$(nproc)}
+
+  echo "Seeding with ${SEED_NUM_CORE} cores..."
+
+  mapproxy-seed -f config/mapproxy.yaml -s config/seed.yaml -c ${SEED_NUM_CORE} &
 fi
 
 # run the remaining command
